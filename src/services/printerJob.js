@@ -1,5 +1,5 @@
 const prisma = require("../config/db");
-const socketConfig = require("../socket");
+const pusher = require("../socket");
 
 exports.startPrinterJob = () => {
   setInterval(async () => {
@@ -77,9 +77,9 @@ exports.startPrinterJob = () => {
       }
 
       if (hasChanges) {
-        try {
-          socketConfig.getIO().emit("printers_updated");
-        } catch (e) {}
+        pusher
+          .trigger("lab-channel", "printers_updated", {})
+          .catch((e) => console.error("Pusher error:", e.message));
       }
     } catch (error) {
       console.error("Error in printer job:", error);

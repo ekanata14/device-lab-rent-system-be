@@ -2,9 +2,9 @@ const prisma = require("../config/db");
 const pusher = require("../socket");
 
 const emitUpdate = () => {
-  try {
-    pusher.trigger("lab-channel", "printers_updated", {});
-  } catch (e) {}
+  pusher
+    .trigger("lab-channel", "printers_updated", {})
+    .catch((e) => console.error("Pusher error:", e.message));
 };
 
 exports.getPrinters = async (req, res) => {
@@ -43,6 +43,11 @@ exports.reservePrinter = async (req, res) => {
   try {
     const { id } = req.params;
     const reservation = req.body;
+
+    if (req.file) {
+      reservation.photoUrl = `/uploads/${req.file.filename}`;
+    }
+
     const endTime = new Date(
       Date.now() + reservation.durationInMinutes * 60000,
     ).toISOString();
@@ -66,6 +71,10 @@ exports.queueReservation = async (req, res) => {
   try {
     const { id } = req.params;
     const reservation = req.body;
+
+    if (req.file) {
+      reservation.photoUrl = `/uploads/${req.file.filename}`;
+    }
 
     const updated = await prisma.printer.update({
       where: { id },

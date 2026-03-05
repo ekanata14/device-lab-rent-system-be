@@ -16,11 +16,17 @@ const { startPrinterJob } = require("./services/printerJob");
 
 const app = express();
 const server = http.createServer(app);
-const io = socketConfig.init(server);
+const pusher = require("./socket");
 const PORT = process.env.PORT || 3001;
+const HOST = process.env.HOST || "0.0.0.0";
+
+const path = require("path");
 
 app.use(cors());
 app.use(express.json());
+
+// Serve static uploaded files
+app.use("/uploads", express.static(path.join(__dirname, "../../uploads")));
 
 // Main init logic
 async function bootstrap() {
@@ -63,6 +69,12 @@ async function bootstrap() {
   }
 
   // Routes
+  app.get("/api", (req, res) => {
+    res.send("API On!");
+  });
+  app.get("/api/health", (req, res) => {
+    res.send("OK");
+  });
   app.use("/api/printers", printerRoutes);
   app.use("/api/logs", logRoutes);
   app.use("/api/settings", settingRoutes);
@@ -71,8 +83,11 @@ async function bootstrap() {
   startPrinterJob();
 
   // Start server
-  server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  server.listen(PORT, HOST, () => {
+    console.log(`Server running on ${HOST}:${PORT}`);
+    console.log(
+      `API is accessible on the local network (e.g. http://<your-ip-address>:${PORT})`,
+    );
   });
 }
 
